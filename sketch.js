@@ -20,6 +20,8 @@ const tetrominoes = [
 function setup() {
   createCanvas(cols * cellSize, rows * cellSize); // Opretter canvas i den rette størrelse
   grid = Array.from({ length: rows }, () => Array(cols).fill(0)); // Initialiserer et tomt gitter
+  currentPiece = new Piece(); // Opretter en ny brik
+  nextPiece = new Piece(); // Opretter den næste brik
 }
 
 // Hoved-loopet, der opdaterer spillet og tegner elementerne
@@ -41,4 +43,24 @@ function drawGrid() {
     
     rect(x * cellSize, y * cellSize, cellSize, cellSize); // Tegner rektangler for hver celle
   }));
+}
+
+// Klasse, der repræsenterer en brik
+class Piece {
+  constructor() {
+    this.shape = random(tetrominoes); // Vælger en tilfældig form
+    this.x = 3; // Starter i midten af spilleområdet
+    this.y = 0; // Starter øverst
+  }
+  // Tegner brikken på spilleområdet
+  show() {
+    fill("white"); // Brikkerne vises i hvid
+    this.shape.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        if (cell) {
+          rect((this.x + x) * cellSize, (this.y + y) * cellSize, cellSize, cellSize);
+        }
+      })
+    );
+  }
 }
