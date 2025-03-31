@@ -3,18 +3,19 @@ const cols = 10, rows = 20, cellSize = 30;
 
 // Initialiserer variabler til gitteret
 let grid;
+let currentPiece;
+let nextPiece;
 
 // De forskellige brikker (tetrominoes), de skal ikke ændres undervejs, og der bruges derfor "const"
 const tetrominoes = [
-[[1, 1, 1, 1]], // I-form
-[[1, 1], [1, 1]], // O-form
-[[0, 1, 0], [1, 1, 1]], // T-form
-[[1, 1, 0], [0, 1, 1]], // S-form
-[[0, 1, 1], [1, 1, 0]], // Z-form
-[[1, 1, 1], [0, 0, 1]], // L-form
-[[1, 1, 1], [1, 0, 0]]  // J-form
+  [[1, 1, 1, 1]], // I-form
+  [[1, 1], [1, 1]], // O-form
+  [[0, 1, 0], [1, 1, 1]], // T-form
+  [[1, 1, 0], [0, 1, 1]], // S-form
+  [[0, 1, 1], [1, 1, 0]], // Z-form
+  [[1, 1, 1], [0, 0, 1]], // L-form
+  [[1, 1, 1], [1, 0, 0]]  // J-form
 ];
- 
 
 // Setup-funktion, der kører én gang ved start
 function setup() {
@@ -28,6 +29,7 @@ function setup() {
 function draw() {
   background(0); // Sætter baggrunden til sort
   drawGrid(); // Tegner spillepladen
+  currentPiece.show(); // Viser den nuværende brik
 }
 
 // Funktion til at tegne gitteret på canvas
@@ -52,6 +54,7 @@ class Piece {
     this.x = 3; // Starter i midten af spilleområdet
     this.y = 0; // Starter øverst
   }
+  
   // Tegner brikken på spilleområdet
   show() {
     fill("white"); // Brikkerne vises i hvid
