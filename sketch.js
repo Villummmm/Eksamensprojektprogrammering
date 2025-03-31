@@ -1,15 +1,22 @@
 const cols = 10, rows = 20, cellSize = 30;
 let grid, currentPiece, nextPiece, gameOver = false;
+let level = 1;
+let linesCleared = 0; 
+let dropSpeed = 48;
 
-// Tetromino-former
+let keys = {}; // Holder styr på hvilke taster der holdes nede
+let keyTimers = {}; // Holder styr på tid før gentagen bevægelse
+const initialKeyDelay = 15; // Frames før man kan holde en tast nede (ca. 0.25 sekunder)
+const repeatKeySpeed = 5; // Hastighed på gentaget bevægelse
+
 const tetrominoes = [
-  [[1, 1, 1, 1]], // I-form
-  [[1, 1], [1, 1]], // O-form
-  [[0, 1, 0], [1, 1, 1]], // T-form
-  [[1, 1, 0], [0, 1, 1]], // S-form
-  [[0, 1, 1], [1, 1, 0]], // Z-form
-  [[1, 1, 1], [0, 0, 1]], // L-form
-  [[1, 1, 1], [1, 0, 0]]  // J-form
+  [[1, 1, 1, 1]],  
+  [[1, 1], [1, 1]], 
+  [[0, 1, 0], [1, 1, 1]], 
+  [[1, 1, 0], [0, 1, 1]], 
+  [[0, 1, 1], [1, 1, 0]], 
+  [[1, 1, 1], [0, 0, 1]], 
+  [[1, 1, 1], [1, 0, 0]]  
 ];
 
 function setup() {
@@ -17,7 +24,7 @@ function setup() {
   grid = Array.from({ length: rows }, () => Array(cols).fill(0));
   currentPiece = new Piece();
   nextPiece = new Piece();
-  frameRate(10);
+  frameRate(60);
 }
 
 function draw() {
@@ -32,10 +39,12 @@ function draw() {
   background(0);
   drawGrid();
   currentPiece.show();
-  
-  if (frameCount % 30 === 0) {
+
+  if (frameCount % dropSpeed === 0) {
     currentPiece.moveDown();
   }
+
+  handleInput(); // Håndterer tastetryk med forsinkelse
 }
 
 function drawGrid() {
@@ -68,9 +77,9 @@ class Piece {
     this.y++;
     if (this.collides()) {
       this.y--;
-      this.merge();
-      this.checkLines();
-      this.spawnNewPiece();
+      this.merge(); // Lås brikken fast straks
+      this.checkLines(); // Tjek for fulde linjer
+      this.spawnNewPiece(); // Spawn ny brik
     }
   }
 
@@ -83,17 +92,20 @@ class Piece {
     let newShape = this.shape[0].map((_, i) => this.shape.map(row => row[i])).reverse();
     let oldShape = this.shape;
     this.shape = newShape;
-    if (this.collides()) this.shape = oldShape;
+    
+    if (this.collides()) {
+      this.shape = oldShape;
+    }
   }
 
   hardDrop() {
     while (!this.collides()) {
       this.y++;
     }
-    this.y--; // Gå én tilbage, da sidste position var ulovlig
-    this.merge();
-    this.checkLines();
-    this.spawnNewPiece();
+    this.y--;
+    this.merge(); // Lås brikken fast med det samme
+    this.checkLines(); // Tjek for fulde linjer
+    this.spawnNewPiece(); // Spawn ny brik
   }
 
   collides() {
@@ -113,23 +125,60 @@ class Piece {
   }
 
   checkLines() {
-    grid = grid.filter(row => row.includes(0));
+    let fullRows = grid.filter(row => row.every(cell => cell === 1));
+    linesCleared += fullRows.length;
+
+    grid = grid.filter(row => !fullRows.includes(row));
     while (grid.length < rows) {
       grid.unshift(Array(cols).fill(0));
     }
+
+    updateLevel();
   }
 
   spawnNewPiece() {
     currentPiece = nextPiece;
     nextPiece = new Piece();
-    if (currentPiece.collides()) gameOver = true;
+    if (currentPiece.collides()) {
+      gameOver = true;
+    }
   }
 }
 
+function updateLevel() {
+  level = Math.floor(linesCleared / 5) + 1;
+  dropSpeed = max(5, 48 - (level * 3)); 
+}
+
+// Håndterer input med forsinkelse på gentagelse
+function handleInput() {
+  Object.keys(keys).forEach(key => {
+    if (keys[key]) {
+      if (keyTimers[key] > 0) {
+        keyTimers[key]--;
+      } else {
+        if (key == LEFT_ARROW) currentPiece.move(-1);
+        if (key == RIGHT_ARROW) currentPiece.move(1);
+        if (key == DOWN_ARROW) currentPiece.moveDown();
+        keyTimers[key] = repeatKeySpeed; // Sætter en lille forsinkelse
+      }
+    }
+  });
+}
+
 function keyPressed() {
-  if (keyCode === LEFT_ARROW) currentPiece.move(-1);
-  if (keyCode === RIGHT_ARROW) currentPiece.move(1);
-  if (keyCode === DOWN_ARROW) currentPiece.moveDown();
-  if (keyCode === UP_ARROW) currentPiece.rotate();
-  if (keyCode === 32) currentPiece.hardDrop(); 
+  if (!keys[keyCode]) { 
+    if (keyCode === LEFT_ARROW) currentPiece.move(-1);
+    if (keyCode === RIGHT_ARROW) currentPiece.move(1);
+    if (keyCode === DOWN_ARROW) currentPiece.moveDown();
+    if (keyCode === UP_ARROW) currentPiece.rotate();
+    if (keyCode === 32) currentPiece.hardDrop();
+  }
+  
+  keys[keyCode] = true;
+  keyTimers[keyCode] = initialKeyDelay; // Starter med en lille pause
+}
+
+function keyReleased() {
+  keys[keyCode] = false;
 }
