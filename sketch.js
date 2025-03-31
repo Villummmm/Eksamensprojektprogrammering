@@ -1,12 +1,7 @@
-// Definerer spillets dimensioner og celle størrelse
 const cols = 10, rows = 20, cellSize = 30;
+let grid, currentPiece, nextPiece, gameOver = false;
 
-// Initialiserer variabler til gitteret
-let grid;
-let currentPiece;
-let nextPiece;
-
-// De forskellige brikker (tetrominoes), de skal ikke ændres undervejs, og der bruges derfor "const"
+// Tetromino-former
 const tetrominoes = [
   [[1, 1, 1, 1]], // I-form
   [[1, 1], [1, 1]], // O-form
@@ -17,47 +12,49 @@ const tetrominoes = [
   [[1, 1, 1], [1, 0, 0]]  // J-form
 ];
 
-// Setup-funktion, der kører én gang ved start
 function setup() {
-  createCanvas(cols * cellSize, rows * cellSize); // Opretter canvas i den rette størrelse
-  grid = Array.from({ length: rows }, () => Array(cols).fill(0)); // Initialiserer et tomt gitter
-  currentPiece = new Piece(); // Opretter en ny brik
-  nextPiece = new Piece(); // Opretter den næste brik
+  createCanvas(cols * cellSize, rows * cellSize);
+  grid = Array.from({ length: rows }, () => Array(cols).fill(0));
+  currentPiece = new Piece();
+  nextPiece = new Piece();
+  frameRate(10);
 }
 
-// Hoved-loopet, der opdaterer spillet og tegner elementerne
 function draw() {
-  background(0); // Sætter baggrunden til sort
-  drawGrid(); // Tegner spillepladen
-  currentPiece.show(); // Viser den nuværende brik
+  if (gameOver) {
+    background(100);
+    fill("white");
+    textSize(32);
+    text("Game Over", width / 4, height / 2);
+    return;
+  }
+
+  background(0);
+  drawGrid();
+  currentPiece.show();
+  
+  if (frameCount % 30 === 0) {
+    currentPiece.moveDown();
+  }
 }
 
-// Funktion til at tegne gitteret på canvas
 function drawGrid() {
   grid.forEach((row, y) => row.forEach((cell, x) => {
-    stroke(50); // Tegner kantfarve
-    
-    if (cell) {
-      fill('white'); // Hvis feltet er 1 (fyldt), tegnes det hvidt
-    } else {
-      fill('black'); // Ellers tegnes det sort
-    }
-    
-    rect(x * cellSize, y * cellSize, cellSize, cellSize); // Tegner rektangler for hver celle
+    stroke(50);
+    fill(cell ? "white" : "black");
+    rect(x * cellSize, y * cellSize, cellSize, cellSize);
   }));
 }
 
-// Klasse, der repræsenterer en brik
 class Piece {
   constructor() {
-    this.shape = random(tetrominoes); // Vælger en tilfældig form
-    this.x = 3; // Starter i midten af spilleområdet
-    this.y = 0; // Starter øverst
+    this.shape = random(tetrominoes);
+    this.x = 3;
+    this.y = 0;
   }
-  
-  // Tegner brikken på spilleområdet
+
   show() {
-    fill("white"); // Brikkerne vises i hvid
+    fill("white");
     this.shape.forEach((row, y) =>
       row.forEach((cell, x) => {
         if (cell) {
@@ -66,4 +63,73 @@ class Piece {
       })
     );
   }
+
+  moveDown() {
+    this.y++;
+    if (this.collides()) {
+      this.y--;
+      this.merge();
+      this.checkLines();
+      this.spawnNewPiece();
+    }
+  }
+
+  move(dir) {
+    this.x += dir;
+    if (this.collides()) this.x -= dir;
+  }
+
+  rotate() {
+    let newShape = this.shape[0].map((_, i) => this.shape.map(row => row[i])).reverse();
+    let oldShape = this.shape;
+    this.shape = newShape;
+    if (this.collides()) this.shape = oldShape;
+  }
+
+  hardDrop() {
+    while (!this.collides()) {
+      this.y++;
+    }
+    this.y--; // Gå én tilbage, da sidste position var ulovlig
+    this.merge();
+    this.checkLines();
+    this.spawnNewPiece();
+  }
+
+  collides() {
+    return this.shape.some((row, dy) =>
+      row.some((cell, dx) => 
+        cell && (grid[this.y + dy]?.[this.x + dx] || this.x + dx < 0 || this.x + dx >= cols || this.y + dy >= rows)
+      )
+    );
+  }
+
+  merge() {
+    this.shape.forEach((row, dy) =>
+      row.forEach((cell, dx) => {
+        if (cell) grid[this.y + dy][this.x + dx] = 1;
+      })
+    );
+  }
+
+  checkLines() {
+    grid = grid.filter(row => row.includes(0));
+    while (grid.length < rows) {
+      grid.unshift(Array(cols).fill(0));
+    }
+  }
+
+  spawnNewPiece() {
+    currentPiece = nextPiece;
+    nextPiece = new Piece();
+    if (currentPiece.collides()) gameOver = true;
+  }
+}
+
+function keyPressed() {
+  if (keyCode === LEFT_ARROW) currentPiece.move(-1);
+  if (keyCode === RIGHT_ARROW) currentPiece.move(1);
+  if (keyCode === DOWN_ARROW) currentPiece.moveDown();
+  if (keyCode === UP_ARROW) currentPiece.rotate();
+  if (keyCode === 32) currentPiece.hardDrop(); 
 }
