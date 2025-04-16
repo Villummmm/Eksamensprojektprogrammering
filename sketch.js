@@ -68,6 +68,7 @@ function draw() {
   text("Level: " + level, cols * cellSize + 10, 40);
 
   drawGrid();
+  currentPiece.showGhost();
   currentPiece.show();
 
   if (frameCount % dropSpeed === 0) {
@@ -94,6 +95,7 @@ class Piece {
 
   show() {
     fill("white");
+    stroke(50);
     this.shape.forEach((row, y) =>
       row.forEach((cell, x) => {
         if (cell) {
@@ -179,6 +181,35 @@ class Piece {
     if (currentPiece.collides()) {
       gameOver = true;
     }
+  }
+
+  // En skyggebrik der viser, hvor brikken vil lande
+  showGhost() {
+    let ghostY = this.y;
+  
+    // Flyt brikken nedad så langt den kan komme
+    while (!this.shape.some((row, dy) =>
+      row.some((cell, dx) =>
+        cell && (
+          grid[ghostY + dy + 1]?.[this.x + dx] || 
+          this.x + dx < 0 || 
+          this.x + dx >= cols || 
+          ghostY + dy + 1 >= rows)
+      )
+    )) {
+      ghostY++;
+    }
+  
+    // Tegn brikken i ghost-position
+    noStroke();
+    fill(255, 255, 255, 50); // Hvid med lav gennemsigtighed
+    this.shape.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        if (cell) {
+          rect((this.x + x) * cellSize, (ghostY + y) * cellSize, cellSize, cellSize);
+        }
+      })
+    );
   }
 }
 
