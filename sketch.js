@@ -4,6 +4,7 @@ let level = 1;
 let linesCleared = 0; 
 let dropSpeed = 48; // Frames pr. fald, lavere tal = hurtigere fald.
 let score = 0; // Holder styr på spillerens point
+let paused = false; // Er spillet sat på pause?
 
 let keys = {}; // Holder styr på hvilke taster der holdes nede
 let keyTimers = {}; // Holder styr på tid før gentagen bevægelse
@@ -29,16 +30,25 @@ function setup() {
 }
 
 function draw() {
+  background(0);
+
+  // Hvis spillet er slut
   if (gameOver) {
-    background(100);
     fill("white");
     textSize(32);
     text("Game Over", width / 4, height / 2);
     return;
   }
 
-  background(0);
-  // Laver et tekstfelt til score og level
+  // Hvis spillet er pauset
+  if (paused) {
+    fill("white");
+    textSize(32);
+    text("PAUSE", width / 2 - 60, height / 2);
+    return;
+  }
+
+  // Tegn score og level tekst
   fill("white");
   textSize(16);
   textAlign(LEFT);
@@ -52,7 +62,7 @@ function draw() {
     currentPiece.moveDown();
   }
 
-  handleInput(); // Håndterer tastetryk med forsinkelse
+  handleInput();
 }
 
 function drawGrid() {
@@ -182,16 +192,21 @@ function handleInput() {
 }
 
 function keyPressed() {
-  if (!keys[keyCode]) { 
+  if (key === 'p' || key === 'P') {
+    paused = !paused;
+    return;
+  }
+
+  if (!keys[keyCode] && !paused) { // Brug ikke taster når spillet er pauset
     if (keyCode === LEFT_ARROW) currentPiece.move(-1);
     if (keyCode === RIGHT_ARROW) currentPiece.move(1);
     if (keyCode === DOWN_ARROW) currentPiece.moveDown();
     if (keyCode === UP_ARROW) currentPiece.rotate();
     if (keyCode === 32) currentPiece.hardDrop();
   }
-  
+
   keys[keyCode] = true;
-  keyTimers[keyCode] = initialKeyDelay; // Starter med en lille pause
+  keyTimers[keyCode] = initialKeyDelay;
 }
 
 function keyReleased() {
