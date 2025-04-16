@@ -49,6 +49,10 @@ function draw() {
     fill("white");
     textSize(32);
     text("Game Over", width / 4, height / 2);
+    textSize(16);
+    textAlign(LEFT);
+    text("Score: " + score, cols * cellSize + 10, 20);
+    text("Level: " + level, cols * cellSize + 10, 40);
     return;
   }
 
