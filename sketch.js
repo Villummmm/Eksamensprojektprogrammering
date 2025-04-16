@@ -2,7 +2,8 @@ const cols = 10, rows = 20, cellSize = 30;
 let grid, currentPiece, nextPiece, gameOver = false;
 let level = 1;
 let linesCleared = 0; 
-let dropSpeed = 48;
+let dropSpeed = 48; // Frames pr. fald, lavere tal = hurtigere fald.
+let score = 0; // Holder styr på spillerens point
 
 let keys = {}; // Holder styr på hvilke taster der holdes nede
 let keyTimers = {}; // Holder styr på tid før gentagen bevægelse
@@ -20,7 +21,7 @@ const tetrominoes = [
 ];
 
 function setup() {
-  createCanvas(cols * cellSize, rows * cellSize);
+  createCanvas(cols * cellSize + 120, rows * cellSize);
   grid = Array.from({ length: rows }, () => Array(cols).fill(0));
   currentPiece = new Piece();
   nextPiece = new Piece();
@@ -37,6 +38,13 @@ function draw() {
   }
 
   background(0);
+  // Laver et tekstfelt til score og level
+  fill("white");
+  textSize(16);
+  textAlign(LEFT);
+  text("Score: " + score, cols * cellSize + 10, 20);
+  text("Level: " + level, cols * cellSize + 10, 40);
+
   drawGrid();
   currentPiece.show();
 
@@ -126,7 +134,14 @@ class Piece {
 
   checkLines() {
     let fullRows = grid.filter(row => row.every(cell => cell === 1));
-    linesCleared += fullRows.length;
+    let cleared = fullRows.length;
+    linesCleared += cleared;
+
+    // Giv point efter hvor mange linjer der blev ryddet
+    if (cleared === 1) score += 100;
+    else if (cleared === 2) score += 300;
+    else if (cleared === 3) score += 500;
+    else if (cleared === 4) score += 800;
 
     grid = grid.filter(row => !fullRows.includes(row));
     while (grid.length < rows) {
