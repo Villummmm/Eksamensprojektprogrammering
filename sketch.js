@@ -5,6 +5,7 @@ let linesCleared = 0;
 let dropSpeed = 48; // Frames pr. fald, lavere tal = hurtigere fald.
 let score = 0; // Holder styr på spillerens point
 let paused = false; // Er spillet sat på pause?
+let started = false; // Er spillet startet endnu?
 
 let keys = {}; // Holder styr på hvilke taster der holdes nede
 let keyTimers = {}; // Holder styr på tid før gentagen bevægelse
@@ -31,6 +32,17 @@ function setup() {
 
 function draw() {
   background(0);
+
+  // Vis startskærm hvis spillet ikke er startet endnu
+  if (!started) {
+    fill("white");
+    textAlign(CENTER);
+    textSize(32);
+    text("TETRIS", width / 2, height / 2 - 40);
+    textSize(16);
+    text("Tryk ENTER for at starte", width / 2, height / 2);
+    return;
+  }
 
   // Hvis spillet er slut
   if (gameOver) {
@@ -194,6 +206,11 @@ function handleInput() {
 function keyPressed() {
   if (key === 'p' || key === 'P') {
     paused = !paused;
+    return;
+  }
+  
+  if (!started && keyCode === ENTER) {
+    started = true;
     return;
   }
 
