@@ -113,7 +113,7 @@ function drawStartScreen() {
   // Footer
   textSize(14);
   fill("#777");
-  text("Programmeret af [Dit Navn]", width / 2, height - 20);
+  text("Programmeret af Michael, Oliver og Villum", width / 2, height - 20);
 }
 
 function drawGameOverScreen() {
